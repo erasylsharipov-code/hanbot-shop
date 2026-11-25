@@ -197,7 +197,9 @@
 <script>
 (() => {
   const tg = window.Telegram && window.Telegram.WebApp;
-  const inTG = !!(tg && tg.initData);
+  // Магазин открывается кнопкой клавиатуры: в этом режиме Telegram не передаёт initData,
+  // поэтому определяем Telegram по платформе.
+  const inTG = !!(tg && tg.platform && tg.platform !== "unknown");
 
   // ---------- тексты ----------
   const I18N = {

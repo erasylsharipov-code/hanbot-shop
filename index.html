@@ -203,7 +203,7 @@
   const I18N = {
     ru: { shop: "Купить", orders: "Мои заказы", pay: "К оплате", pack: "Выберите пакет", phone: "Номер для пополнения",
       how: "Как это работает", h1: "Выбор", h2: "Оплата Kaspi", h3: "Чек в бот", h4: "ГБ на номере",
-      own: "Свой объём", ownHint: "от {min} до {max} ГБ", per: "{p} ₸ за ГБ", hit: "🔥 Хит",
+      own: "Свой объём", from: "от {n} ГБ", ownHint: "от {min} до {max} ГБ", per: "{p} ₸ за ГБ", hit: "🔥 Хит",
       hintEmpty: "Гигабайты придут на этот номер", hint10: "Введите 10 цифр после +7", hint7: "Номер должен начинаться с 7",
       hintOk: "✓ Номер введён", hintOp: "⚠️ Номер похож на {g}, а выбран {o}",
       btn: "Оформить · {sum}", btnOp: "Выберите оператора", btnPhone: "Введите номер", off: "нет в наличии",
@@ -214,7 +214,7 @@
       ordersNote: "Статусы обновляются после сообщений бота", order: "Заказ" },
     kk: { shop: "Сатып алу", orders: "Тапсырыстарым", pay: "Төлем", pack: "Пакетті таңдаңыз", phone: "Толтырылатын нөмір",
       how: "Қалай жұмыс істейді", h1: "Таңдау", h2: "Kaspi төлем", h3: "Түбіртек ботқа", h4: "ГБ нөмірде",
-      own: "Өз көлеміңіз", ownHint: "{min}-ден {max} ГБ-қа дейін", per: "1 ГБ {p} ₸", hit: "🔥 Хит",
+      own: "Өз көлеміңіз", from: "{n} ГБ-тан", ownHint: "{min}-ден {max} ГБ-қа дейін", per: "1 ГБ {p} ₸", hit: "🔥 Хит",
       hintEmpty: "Гигабайт осы нөмірге келеді", hint10: "+7-ден кейін 10 сан енгізіңіз", hint7: "Нөмір 7-ден басталуы керек",
       hintOk: "✓ Нөмір енгізілді", hintOp: "⚠️ Нөмір {g} операторына ұқсайды, ал таңдалғаны {o}",
       btn: "Рәсімдеу · {sum}", btnOp: "Операторды таңдаңыз", btnPhone: "Нөмірді енгізіңіз", off: "қолжетімсіз",
@@ -226,8 +226,8 @@
   };
 
   // ---------- настройки от бота (?c=base64 JSON) ----------
-  const DEFAULT = { o: [["activ", "Activ", 130, 1], ["beeline", "Beeline", 200, 1], ["tele2", "Tele2", 180, 1]],
-    p: [3, 5, 10, 20], min: 3, max: 50, d: { "5": 5, "10": 10, "20": 15 }, hit: 5, l: "ru", h: [] };
+  const DEFAULT = { o: [["activ", "Activ", 130, 1, 0], ["beeline", "Beeline", 200, 1, 0], ["tele2", "Tele2", 180, 1, 3]],
+    p: [1, 2, 3, 5, 10, 20], min: 1, max: 50, d: {}, hit: 5, l: "ru", h: [] };
   function readCfg() {
     try {
       let raw = new URLSearchParams(location.search).get("c");
@@ -246,7 +246,14 @@
   };
   const PREFIX = { activ: ["701","702","775","778"], beeline: ["705","777","771","776"], tele2: ["707","747","700","708"] };
 
-  const ops = cfg.o.map(([key, name, price, on]) => ({ key, name, price, on: !!on }));
+  const ops = cfg.o.map(([key, name, price, on, mn]) => ({ key, name, price, on: !!on, min: Math.max(cfg.min, mn || 0) }));
+  const curOp = () => ops.find(o => o.key === st.op);
+  const opMin = () => (curOp() || { min: cfg.min }).min;
+  // объём не меньше минимума выбранного оператора
+  function clampGb() {
+    st.gb = Math.min(cfg.max, Math.max(opMin(), st.gb));
+    st.custom = !cfg.p.includes(st.gb);
+  }
   const st = {
     lang: I18N[cfg.l] ? cfg.l : "ru",
     tab: "shop",
@@ -255,6 +262,7 @@
     custom: false,
     phone: "",
   };
+  clampGb();
 
   const $ = id => document.getElementById(id);
   const T = (k, v) => (I18N[st.lang][k] || k).replace(/\{(\w+)\}/g, (_, x) => v && v[x] !== undefined ? v[x] : "");
@@ -301,8 +309,9 @@
       const el = document.createElement("div");
       el.className = "op" + (o.key === st.op ? " on" : "") + (o.on ? "" : " off");
       el.innerHTML = `<div class="dot" style="background:${th.dot};color:${th.dotInk}">${th.ch}</div>
-        <div class="n">${o.name}</div><div class="p">${o.on ? T("per", { p: fmt(o.price) }) : T("off")}</div>`;
-      el.onclick = () => { st.op = o.key; tick(); applyTheme(); renderOps(); renderPacks(); update(); };
+        <div class="n">${o.name}</div><div class="p">${o.on ? T("per", { p: fmt(o.price) }) : T("off")}</div>` +
+        (o.on && o.min > cfg.min ? `<div class="p">${T("from", { n: o.min })}</div>` : "");
+      el.onclick = () => { st.op = o.key; clampGb(); tick(); applyTheme(); renderOps(); renderPacks(); update(); };
       $("ops").appendChild(el);
     });
   }
@@ -311,7 +320,7 @@
     const op = ops.find(o => o.key === st.op);
     $("packs").innerHTML = "";
     if (!op) return;
-    cfg.p.filter(v => v >= cfg.min && v <= cfg.max).forEach(gb => {
+    cfg.p.filter(v => v >= op.min && v <= cfg.max).forEach(gb => {
       const pr = price(op, gb);
       const el = document.createElement("div");
       el.className = "ticket" + (!st.custom && st.gb === gb ? " on" : "");
@@ -323,11 +332,11 @@
     });
     const c = document.createElement("div");
     c.className = "custom" + (st.custom ? " on" : "");
-    c.innerHTML = `<div class="t">${T("own")}<div>${T("ownHint", { min: cfg.min, max: cfg.max })}</div></div>
+    c.innerHTML = `<div class="t">${T("own")}<div>${T("ownHint", { min: op.min, max: cfg.max })}</div></div>
       <div class="stp"><button type="button" data-d="-1">−</button><span>${st.gb}</span><button type="button" data-d="1">+</button></div>`;
     c.querySelectorAll("button").forEach(b => b.onclick = ev => {
       ev.stopPropagation();
-      st.custom = true; st.gb = Math.min(cfg.max, Math.max(cfg.min, st.gb + +b.dataset.d)); tick(); renderPacks(); update();
+      st.custom = true; st.gb = Math.min(cfg.max, Math.max(op.min, st.gb + +b.dataset.d)); tick(); renderPacks(); update();
     });
     c.onclick = () => { if (!st.custom) { st.custom = true; renderPacks(); update(); } };
     $("packs").appendChild(c);
@@ -413,8 +422,8 @@
       if (!o) return;
       const op = ops.find(x => x.key === o[1]);
       if (op && op.on) st.op = op.key;
-      st.gb = Math.min(cfg.max, Math.max(cfg.min, o[2]));
-      st.custom = !cfg.p.includes(st.gb);
+      st.gb = o[2];
+      clampGb();
       phone.value = o[4].replace(/^\+7/, ""); phone.oninput();
       setTab("shop"); applyTheme(); renderOps(); renderPacks(); update();
       try { tg.HapticFeedback.impactOccurred("light"); } catch (e) {}

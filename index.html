@@ -192,6 +192,7 @@
 
   <main id="orders" hidden></main>
 </div>
+<div style="text-align:center;font-size:10px;opacity:.35;padding:8px 0 4px">v3</div>
 <div class="cta" id="cta"><button type="button" id="ctaBtn"></button></div>
 
 <script>
@@ -199,7 +200,7 @@
   const tg = window.Telegram && window.Telegram.WebApp;
   // Магазин открывается кнопкой клавиатуры: в этом режиме Telegram не передаёт initData,
   // поэтому определяем Telegram по платформе.
-  const inTG = !!(tg && tg.platform && tg.platform !== "unknown");
+  const inTG = !!(tg && (tg.initData || (tg.platform && tg.platform !== "unknown")));
 
   // ---------- тексты ----------
   const I18N = {

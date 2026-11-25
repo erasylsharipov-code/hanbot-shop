@@ -3,329 +3,448 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>HANBOT · Гигабайты</title>
+<title>HANBOT</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: #0d0b14;
-    --card: #17141f;
-    --card-2: #1f1b2b;
-    --line: #2c2740;
-    --text: #f4f2fa;
-    --muted: #9a93b0;
-    --accent: #8b5cf6;
-    --accent-2: #22d3ee;
-    --ok: #34d399;
-    --warn: #fbbf24;
-    --err: #f87171;
-    --radius: 18px;
+    /* цвета оператора — меняются скриптом */
+    --op-1: #ff3d9a; --op-2: #b80064; --op-ink: #ffffff; --op-soft: rgba(255, 61, 154, .12); --op-solid: #e0177f;
+    /* поверхности */
+    --bg: #f3f2f7; --surface: #ffffff; --surface-2: #f1eff6; --line: #e6e3ee;
+    --text: #17151f; --muted: #7b7690; --ok: #12a66a; --warn: #c27c00; --err: #d93a3a;
+    --r: 20px;
+  }
+  .dark {
+    --bg: #0f0e14; --surface: #1a1922; --surface-2: #23212e; --line: #2e2b3b;
+    --text: #f3f1fa; --muted: #9690ab; --ok: #34d399; --warn: #fbbf24; --err: #f87171;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
     font: 15px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; }
-  body { padding: 18px 16px 120px; max-width: 520px; margin: 0 auto;
-    background:
-      radial-gradient(600px 300px at 100% -10%, rgba(139,92,246,.22), transparent 60%),
-      radial-gradient(500px 260px at -10% 0%, rgba(34,211,238,.12), transparent 60%),
-      var(--bg); background-attachment: fixed; }
+  body { padding-bottom: 110px; }
+  .wrap { max-width: 520px; margin: 0 auto; }
+  button { font: inherit; color: inherit; }
 
-  header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .logo { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2)); font-weight: 800; font-size: 18px;
-    box-shadow: 0 8px 24px rgba(139,92,246,.35); }
-  header h1 { margin: 0; font-size: 20px; letter-spacing: -.2px; }
-  header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  /* ---------- шапка в цветах оператора ---------- */
+  .hero { position: relative; overflow: hidden; color: var(--op-ink); padding: 16px 16px 22px;
+    background: linear-gradient(150deg, var(--op-1), var(--op-2)); border-radius: 0 0 28px 28px;
+    transition: background .45s ease, color .3s; }
+  .hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none;
+    background: rgba(255,255,255,.12); }
+  .hero::before { width: 260px; height: 260px; right: -90px; top: -120px; }
+  .hero::after { width: 160px; height: 160px; left: -60px; bottom: -90px; background: rgba(255,255,255,.08); }
+  .hero.beeline::before { background: repeating-linear-gradient(-45deg, rgba(0,0,0,.08) 0 10px, transparent 10px 20px); }
+  .top { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; letter-spacing: -.2px; }
+  .brand i { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; font-style: normal;
+    background: rgba(255,255,255,.22); font-size: 17px; }
+  .hero.beeline .brand i { background: rgba(0,0,0,.1); }
+  .lang { display: flex; background: rgba(0,0,0,.16); border-radius: 999px; padding: 3px; }
+  .lang button { border: 0; background: transparent; padding: 5px 11px; border-radius: 999px; font-size: 13px; font-weight: 700;
+    color: inherit; opacity: .75; cursor: pointer; }
+  .lang button.on { background: rgba(255,255,255,.95); color: #17151f; opacity: 1; }
 
-  .section { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 16px; margin-bottom: 12px; }
-  .step { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px;
-    font-weight: 700; letter-spacing: .6px; text-transform: uppercase; margin-bottom: 12px; }
-  .step b { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
-    background: var(--card-2); color: var(--text); font-size: 11px; border: 1px solid var(--line); }
+  .tabs { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 16px;
+    background: rgba(0,0,0,.14); border-radius: 14px; padding: 4px; }
+  .tabs button { border: 0; background: transparent; padding: 9px; border-radius: 11px; font-weight: 700; font-size: 14px;
+    color: inherit; opacity: .8; cursor: pointer; }
+  .tabs button.on { background: rgba(255,255,255,.95); color: #17151f; opacity: 1; }
+  .tabs b { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px;
+    border-radius: 9px; font-size: 11px; background: var(--op-solid); color: #fff; }
 
-  /* операторы */
-  .ops { display: grid; gap: 10px; }
-  .op { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px;
-    background: var(--card-2); border: 1.5px solid transparent; cursor: pointer;
-    transition: border-color .15s, transform .1s, background .15s; }
-  .op:active { transform: scale(.985); }
-  .op.sel { border-color: var(--accent); background: linear-gradient(90deg, rgba(139,92,246,.18), rgba(139,92,246,.04)); }
-  .op.off { opacity: .4; pointer-events: none; }
-  .badge { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
-    font-weight: 800; font-size: 15px; flex: none; }
-  .op .name { font-weight: 700; font-size: 16px; }
-  .op .price { color: var(--muted); font-size: 13px; }
-  .op .price em { font-style: normal; color: var(--text); font-weight: 600; }
-  .radio { margin-left: auto; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); flex: none;
-    display: grid; place-items: center; transition: .15s; }
-  .op.sel .radio { border-color: var(--accent); background: var(--accent); }
-  .op.sel .radio::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+  .ops { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+  .op { border: 2px solid transparent; border-radius: 16px; padding: 10px 6px; text-align: center; cursor: pointer;
+    background: rgba(255,255,255,.16); transition: .2s; }
+  .hero.beeline .op { background: rgba(0,0,0,.07); }
+  .op.on { background: rgba(255,255,255,.96); color: #17151f; border-color: rgba(255,255,255,.96);
+    box-shadow: 0 8px 20px rgba(0,0,0,.18); transform: translateY(-2px); }
+  .hero.beeline .op.on { border-color: #17151f; }
+  .op.off { opacity: .35; pointer-events: none; }
+  .op .dot { width: 26px; height: 26px; border-radius: 9px; margin: 0 auto 6px; display: grid; place-items: center;
+    font-size: 11px; font-weight: 900; }
+  .op .n { font-weight: 800; font-size: 14px; }
+  .op .p { font-size: 11.5px; opacity: .75; }
 
-  /* объём */
-  .amount { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin: 4px 0 14px; }
-  .amount .num { font-size: 52px; font-weight: 800; letter-spacing: -2px;
-    background: linear-gradient(135deg, #fff, #c4b5fd); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .amount .unit { font-size: 20px; font-weight: 700; color: var(--muted); }
-  .stepper { display: flex; align-items: center; gap: 12px; }
-  .stepper button { width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line);
-    background: var(--card-2); color: var(--text); font-size: 22px; cursor: pointer; flex: none; }
-  .stepper button:active { background: var(--line); }
-  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px;
-    background: linear-gradient(90deg, var(--accent) var(--fill, 0%), var(--line) var(--fill, 0%)); outline: none; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%;
-    background: #fff; border: 5px solid var(--accent); box-shadow: 0 2px 10px rgba(0,0,0,.4); cursor: pointer; }
-  input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff;
-    border: 5px solid var(--accent); cursor: pointer; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-  .chip { padding: 8px 14px; border-radius: 999px; background: var(--card-2); border: 1px solid var(--line);
-    font-weight: 600; font-size: 14px; cursor: pointer; transition: .15s; }
-  .chip.sel { background: var(--accent); border-color: var(--accent); }
+  .sum { position: relative; z-index: 1; margin-top: 18px; display: flex; align-items: flex-end; justify-content: space-between; }
+  .sum .l { font-size: 13px; opacity: .8; }
+  .sum .v { font-size: 40px; font-weight: 850; letter-spacing: -1.5px; line-height: 1.05; }
+  .sum .r { text-align: right; font-size: 13px; opacity: .9; }
+  .sum s { opacity: .6; }
+  .pill { display: inline-block; margin-top: 4px; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 800;
+    background: rgba(255,255,255,.95); color: var(--op-solid); }
+  .hero.beeline .pill { background: #17151f; color: #ffd200; }
 
-  /* номер */
-  .phone { display: flex; align-items: center; border-radius: 14px; background: var(--card-2);
-    border: 1.5px solid var(--line); transition: border-color .15s; overflow: hidden; }
-  .phone:focus-within { border-color: var(--accent); }
+  /* ---------- тело ---------- */
+  main { padding: 16px; }
+  h3 { margin: 6px 4px 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); }
+  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  /* «билет» с вырезами по бокам */
+  .ticket { position: relative; cursor: pointer; padding: 14px 14px 12px; background: var(--surface);
+    border: 2px solid var(--line); border-radius: 18px; transition: border-color .15s, transform .1s;
+    -webkit-mask: radial-gradient(circle 9px at 0 62%, #0000 98%, #000) left / 51% 100% no-repeat,
+                  radial-gradient(circle 9px at 100% 62%, #0000 98%, #000) right / 51% 100% no-repeat;
+            mask: radial-gradient(circle 9px at 0 62%, #0000 98%, #000) left / 51% 100% no-repeat,
+                  radial-gradient(circle 9px at 100% 62%, #0000 98%, #000) right / 51% 100% no-repeat; }
+  .ticket:active { transform: scale(.98); }
+  .ticket.on { border-color: var(--op-solid); background: linear-gradient(180deg, var(--op-soft), var(--surface) 70%); }
+  .ticket .gb { font-size: 28px; font-weight: 850; letter-spacing: -1px; }
+  .ticket .gb small { font-size: 15px; font-weight: 700; color: var(--muted); margin-left: 2px; }
+  .ticket .cut { border-top: 2px dashed var(--line); margin: 10px -2px 8px; }
+  .ticket .pr { font-weight: 800; font-size: 16px; }
+  .ticket .per { font-size: 12px; color: var(--muted); }
+  .tag { position: absolute; top: 10px; right: 10px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 800;
+    background: var(--op-solid); color: #fff; }
+  .hero.beeline ~ main .tag:not(.hit) { color: #17151f; }
+  .tag.hit { background: #ff6a00; color: #fff; }
+  .custom { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface);
+    border: 2px solid var(--line); border-radius: 18px; }
+  .custom.on { border-color: var(--op-solid); }
+  .custom .t { flex: 1; font-weight: 700; }
+  .custom .t div { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .stp { display: flex; align-items: center; gap: 6px; }
+  .stp button { width: 36px; height: 36px; border-radius: 11px; border: 0; background: var(--surface-2); font-size: 20px; cursor: pointer; }
+  .stp span { min-width: 44px; text-align: center; font-weight: 800; font-size: 17px; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
+  .phone { display: flex; align-items: center; background: var(--surface-2); border-radius: 14px; border: 2px solid transparent; }
+  .phone:focus-within { border-color: var(--op-solid); }
   .phone.bad { border-color: var(--err); }
-  .phone span { padding: 0 4px 0 16px; font-weight: 700; font-size: 18px; color: var(--muted); }
-  .phone input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: var(--text);
-    font: 600 18px/1 inherit; letter-spacing: .5px; padding: 16px 16px 16px 4px; }
-  .phone input::placeholder { color: #4b4562; }
-  .hint { font-size: 13px; margin-top: 8px; min-height: 18px; color: var(--muted); }
-  .hint.warn { color: var(--warn); }
-  .hint.ok { color: var(--ok); }
+  .phone span { padding-left: 14px; font-weight: 800; font-size: 18px; color: var(--muted); }
+  .phone input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text);
+    font: 700 18px/1 inherit; letter-spacing: .4px; padding: 15px 14px 15px 6px; }
+  .phone input::placeholder { color: var(--muted); opacity: .5; }
+  .hint { font-size: 13px; color: var(--muted); margin: 8px 2px 0; min-height: 18px; }
+  .hint.warn { color: var(--warn); } .hint.ok { color: var(--ok); }
 
-  /* итог */
-  .total { display: flex; justify-content: space-between; align-items: center; }
-  .total .lbl { color: var(--muted); font-size: 13px; }
-  .total .val { font-size: 30px; font-weight: 800; letter-spacing: -.5px; }
-  .total .sub { color: var(--muted); font-size: 13px; text-align: right; }
-  .save { display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 700;
-    background: rgba(52,211,153,.14); color: var(--ok); }
+  .how { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; font-size: 11.5px; color: var(--muted); }
+  .how div { padding: 10px 4px; }
+  .how i { display: block; font-style: normal; font-size: 20px; margin-bottom: 4px; }
 
-  .how { display: grid; gap: 10px; }
-  .how div { display: flex; gap: 10px; color: var(--muted); font-size: 14px; }
-  .how i { font-style: normal; flex: none; }
+  /* ---------- мои заказы ---------- */
+  .order { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; margin-bottom: 10px; }
+  .order .h { display: flex; justify-content: space-between; align-items: center; }
+  .order .id { font-weight: 800; }
+  .order .when { font-size: 12px; color: var(--muted); }
+  .order .what { margin-top: 6px; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .order .what .dot { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; font-size: 10px; font-weight: 900; }
+  .order .amt { margin-left: auto; font-weight: 800; }
+  .prog { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 12px; }
+  .prog div { height: 6px; border-radius: 3px; background: var(--surface-2); }
+  .prog div.on { background: var(--ok); }
+  .prog div.cur { background: linear-gradient(90deg, var(--ok), var(--ok) 50%, var(--surface-2) 50%); background-size: 200% 100%;
+    animation: run 1.4s linear infinite; }
+  @keyframes run { from { background-position: 100% 0 } to { background-position: 0 0 } }
+  .labels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; font-size: 11px; color: var(--muted); }
+  .labels .on { color: var(--text); font-weight: 700; }
+  .order .st { margin-top: 10px; font-size: 13px; font-weight: 700; }
+  .order .st.bad { color: var(--err); }
+  .order .rep { margin-top: 10px; width: 100%; border: 0; border-radius: 12px; padding: 11px; font-weight: 800; cursor: pointer;
+    background: var(--surface-2); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 20px; }
+  .empty i { display: block; font-size: 40px; font-style: normal; margin-bottom: 8px; }
 
   .cta { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    background: linear-gradient(transparent, var(--bg) 35%); display: none; }
-  .cta button { width: 100%; max-width: 520px; display: block; margin: 0 auto; border: 0; border-radius: 16px;
-    padding: 17px; font: 700 17px/1 inherit; color: #fff; cursor: pointer;
-    background: linear-gradient(135deg, var(--accent), #6366f1); box-shadow: 0 10px 30px rgba(139,92,246,.4); }
-  .cta button:disabled { opacity: .45; box-shadow: none; }
-  footer { text-align: center; color: #5d5675; font-size: 12px; margin-top: 18px; }
+    background: linear-gradient(transparent, var(--bg) 40%); display: none; }
+  .cta button { width: 100%; max-width: 488px; display: block; margin: 0 auto; border: 0; border-radius: 16px; padding: 17px;
+    font-weight: 800; font-size: 17px; cursor: pointer; color: var(--op-ink);
+    background: linear-gradient(150deg, var(--op-1), var(--op-2)); box-shadow: 0 10px 26px var(--op-soft); }
+  .cta button:disabled { opacity: .45; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
-  <header>
-    <div class="logo">GB</div>
-    <div>
-      <h1>HANBOT</h1>
-      <p>Гигабайты на Activ · Beeline · Tele2</p>
+<div class="wrap">
+  <section class="hero" id="hero">
+    <div class="top">
+      <div class="brand"><i>⚡</i>HANBOT</div>
+      <div class="lang"><button data-l="kk">KZ</button><button data-l="ru">RU</button></div>
     </div>
-  </header>
-
-  <section class="section">
-    <div class="step"><b>1</b> Оператор</div>
-    <div class="ops" id="ops"></div>
-  </section>
-
-  <section class="section">
-    <div class="step"><b>2</b> Сколько гигабайт</div>
-    <div class="amount"><span class="num" id="gbNum">5</span><span class="unit">ГБ</span></div>
-    <div class="stepper">
-      <button type="button" id="minus" aria-label="Меньше">−</button>
-      <input type="range" id="range" min="1" max="20" step="1" value="5" aria-label="Объём">
-      <button type="button" id="plus" aria-label="Больше">+</button>
+    <div class="tabs">
+      <button data-tab="shop" class="on" id="tShop"></button>
+      <button data-tab="orders" id="tOrders"></button>
     </div>
-    <div class="chips" id="chips"></div>
-  </section>
-
-  <section class="section">
-    <div class="step"><b>3</b> Номер для пополнения</div>
-    <label class="phone" id="phoneBox">
-      <span>+7</span>
-      <input id="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="700 000 00 00" maxlength="13">
-    </label>
-    <div class="hint" id="hint">Гигабайты придут на этот номер</div>
-  </section>
-
-  <section class="section">
-    <div class="total">
-      <div>
-        <div class="lbl">К оплате</div>
-        <div class="val" id="total">0 ₸</div>
+    <div id="heroShop">
+      <div class="ops" id="ops"></div>
+      <div class="sum">
+        <div><div class="l" id="lPay"></div><div class="v" id="total">0 ₸</div></div>
+        <div class="r" id="sumR"></div>
       </div>
-      <div class="sub" id="totalSub"></div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="step">Как это работает</div>
-    <div class="how">
-      <div><i>🛒</i>Выберите оператора, объём и номер</div>
-      <div><i>💳</i>Оплатите на Kaspi по реквизитам из чата</div>
-      <div><i>🧾</i>Пришлите чек в чат с ботом</div>
-      <div><i>⚡</i>Гигабайты придут после проверки оплаты</div>
+  <main id="shop">
+    <h3 id="lPack"></h3>
+    <div class="packs" id="packs"></div>
+
+    <h3 id="lPhone" style="margin-top:20px"></h3>
+    <div class="card">
+      <label class="phone" id="phoneBox"><span>+7</span>
+        <input id="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="700 000 00 00" maxlength="13">
+      </label>
+      <div class="hint" id="hint"></div>
     </div>
-  </section>
 
-  <footer>Оплата и чек — в чате с ботом</footer>
+    <h3 id="lHow" style="margin-top:20px"></h3>
+    <div class="card how" id="how"></div>
+  </main>
 
-  <div class="cta" id="cta"><button type="button" id="ctaBtn">Оформить заказ</button></div>
+  <main id="orders" hidden></main>
+</div>
+<div class="cta" id="cta"><button type="button" id="ctaBtn"></button></div>
 
 <script>
 (() => {
   const tg = window.Telegram && window.Telegram.WebApp;
-  const inTelegram = !!(tg && tg.initData);
+  const inTG = !!(tg && tg.initData);
 
-  // Цены приходят от бота в параметре ?c=... (base64 JSON), чтобы страница всегда показывала актуальные.
-  const DEFAULT = {
-    o: [["activ", "Activ", 130, 1], ["beeline", "Beeline", 130, 1], ["tele2", "Tele2", 170, 1]],
-    p: [1, 2, 3, 5, 10, 20], min: 1, max: 20,
+  // ---------- тексты ----------
+  const I18N = {
+    ru: { shop: "Купить", orders: "Мои заказы", pay: "К оплате", pack: "Выберите пакет", phone: "Номер для пополнения",
+      how: "Как это работает", h1: "Выбор", h2: "Оплата Kaspi", h3: "Чек в бот", h4: "ГБ на номере",
+      own: "Свой объём", ownHint: "от {min} до {max} ГБ", per: "{p} ₸ за ГБ", hit: "🔥 Хит",
+      hintEmpty: "Гигабайты придут на этот номер", hint10: "Введите 10 цифр после +7", hint7: "Номер должен начинаться с 7",
+      hintOk: "✓ Номер введён", hintOp: "⚠️ Номер похож на {g}, а выбран {o}",
+      btn: "Оформить · {sum}", btnOp: "Выберите оператора", btnPhone: "Введите номер", off: "нет в наличии",
+      save: "−{p}%", noOrders: "Заказов пока нет", noOrdersSub: "Оформите первый — это займёт минуту",
+      s1: "Оплата", s2: "Проверка", s3: "Отправка", s4: "Готово", repeat: "🔁 Повторить заказ",
+      st_new: "⏳ Ждём оплату и чек в чате", st_review: "🔎 Проверяем оплату", st_paid: "🚀 Отправляем гигабайты",
+      st_done: "✅ Гигабайты отправлены", st_rejected: "❌ Оплата не подтверждена", st_cancelled: "🚫 Отменён",
+      ordersNote: "Статусы обновляются после сообщений бота", order: "Заказ" },
+    kk: { shop: "Сатып алу", orders: "Тапсырыстарым", pay: "Төлем", pack: "Пакетті таңдаңыз", phone: "Толтырылатын нөмір",
+      how: "Қалай жұмыс істейді", h1: "Таңдау", h2: "Kaspi төлем", h3: "Түбіртек ботқа", h4: "ГБ нөмірде",
+      own: "Өз көлеміңіз", ownHint: "{min}-ден {max} ГБ-қа дейін", per: "1 ГБ {p} ₸", hit: "🔥 Хит",
+      hintEmpty: "Гигабайт осы нөмірге келеді", hint10: "+7-ден кейін 10 сан енгізіңіз", hint7: "Нөмір 7-ден басталуы керек",
+      hintOk: "✓ Нөмір енгізілді", hintOp: "⚠️ Нөмір {g} операторына ұқсайды, ал таңдалғаны {o}",
+      btn: "Рәсімдеу · {sum}", btnOp: "Операторды таңдаңыз", btnPhone: "Нөмірді енгізіңіз", off: "қолжетімсіз",
+      save: "−{p}%", noOrders: "Әзірге тапсырыс жоқ", noOrdersSub: "Біріншісін рәсімдеңіз — бір минут қана",
+      s1: "Төлем", s2: "Тексеру", s3: "Жіберу", s4: "Дайын", repeat: "🔁 Қайталау",
+      st_new: "⏳ Төлем мен түбіртек күтілуде", st_review: "🔎 Төлем тексерілуде", st_paid: "🚀 Гигабайт жіберілуде",
+      st_done: "✅ Гигабайт жіберілді", st_rejected: "❌ Төлем расталмады", st_cancelled: "🚫 Жойылды",
+      ordersNote: "Мәртебелер бот хабарламаларынан кейін жаңарады", order: "Тапсырыс" },
   };
-  function readConfig() {
+
+  // ---------- настройки от бота (?c=base64 JSON) ----------
+  const DEFAULT = { o: [["activ", "Activ", 130, 1], ["beeline", "Beeline", 130, 1], ["tele2", "Tele2", 170, 1]],
+    p: [1, 3, 5, 10, 20], min: 1, max: 50, d: { "5": 5, "10": 10, "20": 15 }, hit: 5, l: "ru", h: [] };
+  function readCfg() {
     try {
-      const raw = new URLSearchParams(location.search).get("c");
+      let raw = new URLSearchParams(location.search).get("c");
       if (!raw) return DEFAULT;
-      const json = decodeURIComponent(escape(atob(raw.replace(/-/g, "+").replace(/_/g, "/"))));
-      return Object.assign({}, DEFAULT, JSON.parse(json));
+      raw = raw.replace(/-/g, "+").replace(/_/g, "/");
+      const bytes = Uint8Array.from(atob(raw + "===".slice((raw.length + 3) % 4)), c => c.charCodeAt(0));
+      return Object.assign({}, DEFAULT, JSON.parse(new TextDecoder().decode(bytes)));
     } catch (e) { return DEFAULT; }
   }
-  const cfg = readConfig();
+  const cfg = readCfg();
 
-  const BRAND = {
-    activ:   { bg: "linear-gradient(135deg,#ec4899,#be185d)", fg: "#fff", ch: "A" },
-    beeline: { bg: "linear-gradient(135deg,#facc15,#eab308)", fg: "#111", ch: "B" },
-    tele2:   { bg: "linear-gradient(135deg,#334155,#0f172a)", fg: "#fff", ch: "T2" },
+  const THEME = {
+    activ:   { a: "#ff3d9a", b: "#b80064", ink: "#fff", solid: "#e0177f", soft: "rgba(224,23,127,.13)", dot: "#e0177f", dotInk: "#fff", ch: "A" },
+    beeline: { a: "#ffe14d", b: "#ffc400", ink: "#17151f", solid: "#c99a00", soft: "rgba(255,196,0,.18)", dot: "#ffd200", dotInk: "#17151f", ch: "B" },
+    tele2:   { a: "#3a3f4b", b: "#0b0c10", ink: "#fff", solid: "#30343f", soft: "rgba(48,52,63,.14)", dot: "#17181d", dotInk: "#fff", ch: "T2" },
   };
-  const PREFIX = {
-    activ: ["701", "702", "775", "778"],
-    beeline: ["705", "777", "771", "776"],
-    tele2: ["707", "747", "700", "708"],
-  };
+  const PREFIX = { activ: ["701","702","775","778"], beeline: ["705","777","771","776"], tele2: ["707","747","700","708"] };
 
   const ops = cfg.o.map(([key, name, price, on]) => ({ key, name, price, on: !!on }));
-  const state = {
+  const st = {
+    lang: I18N[cfg.l] ? cfg.l : "ru",
+    tab: "shop",
     op: (ops.find(o => o.on) || {}).key || null,
-    gb: Math.min(Math.max(5, cfg.min), cfg.max),
+    gb: cfg.p.includes(cfg.hit) ? cfg.hit : (cfg.p[0] || cfg.min),
+    custom: false,
     phone: "",
   };
 
   const $ = id => document.getElementById(id);
-  const fmt = n => n.toLocaleString("ru-RU").replace(/,/g, " ");
-  const haptic = t => { try { tg && tg.HapticFeedback && tg.HapticFeedback.selectionChanged(); } catch (e) {} };
+  const T = (k, v) => (I18N[st.lang][k] || k).replace(/\{(\w+)\}/g, (_, x) => v && v[x] !== undefined ? v[x] : "");
+  const fmt = n => Math.round(n).toLocaleString("ru-RU").replace(/ |,/g, " ");
+  const tick = () => { try { tg.HapticFeedback.selectionChanged(); } catch (e) {} };
 
-  // ---- операторы
+  // та же формула, что у бота (logic.price_for)
+  function discount(gb) { let p = 0; for (const k in cfg.d) if (gb >= +k) p = Math.max(p, +cfg.d[k]); return p; }
+  function price(op, gb) {
+    const pct = discount(gb), base = op.price * gb;
+    return { sum: pct ? Math.round(base * (100 - pct) / 100 / 10) * 10 : base, pct, base };
+  }
+
+  // ---------- тема оператора ----------
+  function applyTheme() {
+    const th = THEME[st.op] || THEME.activ, r = document.documentElement.style;
+    r.setProperty("--op-1", th.a); r.setProperty("--op-2", th.b); r.setProperty("--op-ink", th.ink);
+    r.setProperty("--op-solid", th.solid); r.setProperty("--op-soft", th.soft);
+    $("hero").className = "hero " + (st.op || "");
+    if (inTG) { try { tg.setHeaderColor(th.a); tg.setBackgroundColor(getComputedStyle(document.body).backgroundColor); } catch (e) {} }
+  }
+
+  // ---------- отрисовка ----------
+  function renderStatic() {
+    document.documentElement.lang = st.lang === "kk" ? "kk" : "ru";
+    document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.l === st.lang));
+    const active = cfg.h.filter(o => ["new", "review", "paid"].includes(o[5])).length;
+    $("tShop").textContent = T("shop");
+    $("tOrders").innerHTML = T("orders") + (active ? `<b>${active}</b>` : "");
+    $("lPay").textContent = T("pay"); $("lPack").textContent = T("pack");
+    $("lPhone").textContent = T("phone"); $("lHow").textContent = T("how");
+    $("how").innerHTML = [["🛒", "h1"], ["💳", "h2"], ["🧾", "h3"], ["⚡", "h4"]]
+      .map(([i, k]) => `<div><i>${i}</i>${T(k)}</div>`).join("");
+  }
+
   function renderOps() {
     $("ops").innerHTML = "";
     ops.forEach(o => {
-      const b = BRAND[o.key] || { bg: "var(--line)", fg: "#fff", ch: o.name[0] };
+      const th = THEME[o.key] || THEME.activ;
       const el = document.createElement("div");
-      el.className = "op" + (o.key === state.op ? " sel" : "") + (o.on ? "" : " off");
-      el.innerHTML =
-        `<div class="badge" style="background:${b.bg};color:${b.fg}">${b.ch}</div>
-         <div><div class="name">${o.name}</div>
-         <div class="price">${o.on ? `<em>${fmt(o.price)} ₸</em> за 1 ГБ` : "временно недоступен"}</div></div>
-         <div class="radio"></div>`;
-      el.onclick = () => { state.op = o.key; haptic(); renderOps(); update(); };
+      el.className = "op" + (o.key === st.op ? " on" : "") + (o.on ? "" : " off");
+      el.innerHTML = `<div class="dot" style="background:${th.dot};color:${th.dotInk}">${th.ch}</div>
+        <div class="n">${o.name}</div><div class="p">${o.on ? T("per", { p: fmt(o.price) }) : T("off")}</div>`;
+      el.onclick = () => { st.op = o.key; tick(); applyTheme(); renderOps(); renderPacks(); update(); };
       $("ops").appendChild(el);
     });
   }
 
-  // ---- объём
-  const range = $("range");
-  range.min = cfg.min; range.max = cfg.max;
-  function setGb(v) {
-    state.gb = Math.min(cfg.max, Math.max(cfg.min, v | 0));
-    haptic(); update();
-  }
-  range.oninput = () => setGb(+range.value);
-  $("minus").onclick = () => setGb(state.gb - 1);
-  $("plus").onclick = () => setGb(state.gb + 1);
-  cfg.p.filter(v => v >= cfg.min && v <= cfg.max).forEach(v => {
+  function renderPacks() {
+    const op = ops.find(o => o.key === st.op);
+    $("packs").innerHTML = "";
+    if (!op) return;
+    cfg.p.filter(v => v >= cfg.min && v <= cfg.max).forEach(gb => {
+      const pr = price(op, gb);
+      const el = document.createElement("div");
+      el.className = "ticket" + (!st.custom && st.gb === gb ? " on" : "");
+      const tag = gb === cfg.hit ? `<span class="tag hit">${T("hit")}</span>` : (pr.pct ? `<span class="tag">${T("save", { p: pr.pct })}</span>` : "");
+      el.innerHTML = `${tag}<div class="gb">${gb}<small>ГБ</small></div><div class="cut"></div>
+        <div class="pr">${fmt(pr.sum)} ₸</div><div class="per">${T("per", { p: fmt(pr.sum / gb) })}</div>`;
+      el.onclick = () => { st.gb = gb; st.custom = false; tick(); renderPacks(); update(); };
+      $("packs").appendChild(el);
+    });
     const c = document.createElement("div");
-    c.className = "chip"; c.textContent = v + " ГБ"; c.dataset.v = v;
-    c.onclick = () => setGb(v);
-    $("chips").appendChild(c);
-  });
+    c.className = "custom" + (st.custom ? " on" : "");
+    c.innerHTML = `<div class="t">${T("own")}<div>${T("ownHint", { min: cfg.min, max: cfg.max })}</div></div>
+      <div class="stp"><button type="button" data-d="-1">−</button><span>${st.gb}</span><button type="button" data-d="1">+</button></div>`;
+    c.querySelectorAll("button").forEach(b => b.onclick = ev => {
+      ev.stopPropagation();
+      st.custom = true; st.gb = Math.min(cfg.max, Math.max(cfg.min, st.gb + +b.dataset.d)); tick(); renderPacks(); update();
+    });
+    c.onclick = () => { if (!st.custom) { st.custom = true; renderPacks(); update(); } };
+    $("packs").appendChild(c);
+  }
 
-  // ---- номер: маска 7XX XXX XX XX
   const phone = $("phone");
   phone.oninput = () => {
     let d = phone.value.replace(/\D/g, "");
     if (d.length === 11 && (d[0] === "8" || d[0] === "7")) d = d.slice(1);
-    d = d.slice(0, 10);
-    state.phone = d;
-    phone.value = [d.slice(0, 3), d.slice(3, 6), d.slice(6, 8), d.slice(8, 10)].filter(Boolean).join(" ");
+    st.phone = d.slice(0, 10);
+    phone.value = [st.phone.slice(0, 3), st.phone.slice(3, 6), st.phone.slice(6, 8), st.phone.slice(8, 10)].filter(Boolean).join(" ");
     update();
   };
-  function phoneValid() { return /^7\d{9}$/.test(state.phone); }
+  const phoneOk = () => /^7\d{9}$/.test(st.phone);
 
   function update() {
-    const op = ops.find(o => o.key === state.op);
-    $("gbNum").textContent = state.gb;
-    range.value = state.gb;
-    range.style.setProperty("--fill", ((state.gb - cfg.min) / Math.max(1, cfg.max - cfg.min) * 100) + "%");
-    document.querySelectorAll(".chip").forEach(c => c.classList.toggle("sel", +c.dataset.v === state.gb));
+    const op = ops.find(o => o.key === st.op);
+    const pr = op ? price(op, st.gb) : { sum: 0, pct: 0, base: 0 };
+    $("total").textContent = fmt(pr.sum) + " ₸";
+    $("sumR").innerHTML = op ? `${st.gb} ГБ · ${op.name}` + (pr.pct ? `<br><s>${fmt(pr.base)} ₸</s> <span class="pill">${T("save", { p: pr.pct })}</span>` : "") : "";
 
-    const total = op ? op.price * state.gb : 0;
-    $("total").textContent = fmt(total) + " ₸";
-    $("totalSub").innerHTML = op ? `${op.name}<br>${state.gb} ГБ × ${fmt(op.price)} ₸` : "";
-
-    // подсказка по номеру
     const hint = $("hint"), box = $("phoneBox");
     hint.className = "hint"; box.classList.remove("bad");
-    if (!state.phone) {
-      hint.textContent = "Гигабайты придут на этот номер";
-    } else if (!phoneValid()) {
-      hint.textContent = state.phone.length < 10 ? "Введите 10 цифр после +7" : "Номер должен начинаться с 7";
-      if (state.phone.length === 10) box.classList.add("bad");
+    if (!st.phone) hint.textContent = T("hintEmpty");
+    else if (!phoneOk()) {
+      hint.textContent = st.phone.length < 10 ? T("hint10") : T("hint7");
+      if (st.phone.length === 10) box.classList.add("bad");
     } else {
-      const guess = Object.keys(PREFIX).find(k => PREFIX[k].includes(state.phone.slice(0, 3)));
-      if (guess && op && guess !== op.key) {
-        const gname = (ops.find(o => o.key === guess) || {}).name || guess;
+      const g = Object.keys(PREFIX).find(k => PREFIX[k].includes(st.phone.slice(0, 3)));
+      if (g && op && g !== op.key) {
         hint.className = "hint warn";
-        hint.textContent = `⚠️ Номер похож на ${gname}, а выбран ${op.name}. Проверьте оператора.`;
-      } else {
-        hint.className = "hint ok";
-        hint.textContent = "✓ Номер введён";
-      }
+        hint.textContent = T("hintOp", { g: (ops.find(o => o.key === g) || {}).name || g, o: op.name });
+      } else { hint.className = "hint ok"; hint.textContent = T("hintOk"); }
     }
 
-    const ready = !!op && phoneValid();
-    const label = ready ? `Оформить · ${fmt(total)} ₸` : (!op ? "Выберите оператора" : "Введите номер");
-    if (inTelegram) {
-      tg.MainButton.setParams({ text: label, color: "#8b5cf6", text_color: "#ffffff", is_visible: true });
+    const ready = !!op && op.on && phoneOk();
+    const label = ready ? T("btn", { sum: fmt(pr.sum) + " ₸" }) : (!op ? T("btnOp") : T("btnPhone"));
+    const th = THEME[st.op] || THEME.activ;
+    if (inTG) {
+      if (st.tab !== "shop") { tg.MainButton.hide(); return; }
+      tg.MainButton.setParams({ text: label, color: th.solid === "#c99a00" ? "#ffc400" : th.solid,
+        text_color: th.ink, is_visible: true });
       ready ? tg.MainButton.enable() : tg.MainButton.disable();
     } else {
-      $("ctaBtn").textContent = label;
-      $("ctaBtn").disabled = !ready;
+      $("cta").style.display = st.tab === "shop" ? "block" : "none";
+      $("ctaBtn").textContent = label; $("ctaBtn").disabled = !ready;
     }
   }
+
+  // ---------- мои заказы ----------
+  const STEP = { new: 0, review: 1, paid: 2, done: 4 };
+  function renderOrders() {
+    const box = $("orders");
+    if (!cfg.h.length) {
+      box.innerHTML = `<div class="empty"><i>📭</i><b>${T("noOrders")}</b><br>${T("noOrdersSub")}</div>`;
+      return;
+    }
+    box.innerHTML = cfg.h.map(([id, opk, gb, amount, ph, status, ts]) => {
+      const op = ops.find(o => o.key === opk) || { name: opk };
+      const th = THEME[opk] || THEME.activ;
+      const d = new Date(ts * 1000);
+      const when = d.toLocaleDateString(st.lang === "kk" ? "kk-KZ" : "ru-RU", { day: "numeric", month: "short" }) +
+        " " + d.toTimeString().slice(0, 5);
+      const bad = status === "rejected" || status === "cancelled";
+      const step = STEP[status];
+      const bars = bad ? "" : `<div class="prog">${[0, 1, 2, 3].map(i =>
+          `<div class="${i < step ? "on" : i === step ? "cur" : ""}"></div>`).join("")}</div>
+        <div class="labels">${["s1", "s2", "s3", "s4"].map((k, i) => `<span class="${i <= step ? "on" : ""}">${T(k)}</span>`).join("")}</div>`;
+      const p = ph.replace(/^\+7(\d{3})(\d{3})(\d{2})(\d{2})$/, "+7 $1 $2 $3 $4");
+      return `<div class="order">
+        <div class="h"><span class="id">${T("order")} #${id}</span><span class="when">${when}</span></div>
+        <div class="what"><span class="dot" style="background:${th.dot};color:${th.dotInk}">${th.ch}</span>
+          ${op.name} · ${gb} ГБ → ${p}<span class="amt">${fmt(amount)} ₸</span></div>
+        ${bars}
+        <div class="st ${bad ? "bad" : ""}">${T("st_" + status)}</div>
+        ${status === "done" || bad ? `<button class="rep" data-r="${id}">${T("repeat")}</button>` : ""}
+      </div>`;
+    }).join("") + `<div class="hint" style="text-align:center">${T("ordersNote")}</div>`;
+    box.querySelectorAll(".rep").forEach(b => b.onclick = () => {
+      const o = cfg.h.find(x => x[0] === +b.dataset.r);
+      if (!o) return;
+      const op = ops.find(x => x.key === o[1]);
+      if (op && op.on) st.op = op.key;
+      st.gb = Math.min(cfg.max, Math.max(cfg.min, o[2]));
+      st.custom = !cfg.p.includes(st.gb);
+      phone.value = o[4].replace(/^\+7/, ""); phone.oninput();
+      setTab("shop"); applyTheme(); renderOps(); renderPacks(); update();
+      try { tg.HapticFeedback.impactOccurred("light"); } catch (e) {}
+    });
+  }
+
+  function setTab(tab) {
+    st.tab = tab;
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+    $("shop").hidden = tab !== "shop"; $("heroShop").hidden = tab !== "shop"; $("orders").hidden = tab !== "orders";
+    if (tab === "orders") renderOrders();
+    update();
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { tick(); setTab(b.dataset.tab); });
+  document.querySelectorAll(".lang button").forEach(b => b.onclick = () => {
+    st.lang = b.dataset.l; tick(); renderStatic(); renderOps(); renderPacks(); if (st.tab === "orders") renderOrders(); update();
+  });
 
   function submit() {
-    const op = ops.find(o => o.key === state.op);
-    if (!op || !phoneValid()) return;
-    const payload = JSON.stringify({ v: 1, op: op.key, gb: state.gb, phone: "+7" + state.phone });
-    if (inTelegram) {
-      try { tg.HapticFeedback.notificationOccurred("success"); } catch (e) {}
-      tg.sendData(payload); // бот получит заказ и пришлёт реквизиты в чат
-    } else {
-      alert("Предпросмотр вне Telegram.\nБот получил бы: " + payload);
-    }
+    const op = ops.find(o => o.key === st.op);
+    if (!op || !op.on || !phoneOk()) return;
+    const data = JSON.stringify({ v: 2, op: op.key, gb: st.gb, phone: "+7" + st.phone, lang: st.lang });
+    if (inTG) { try { tg.HapticFeedback.notificationOccurred("success"); } catch (e) {} tg.sendData(data); }
+    else alert("Предпросмотр вне Telegram.\nБот получил бы: " + data);
   }
 
-  if (inTelegram) {
+  if (inTG) {
     tg.ready(); tg.expand();
-    try { tg.setHeaderColor("#0d0b14"); tg.setBackgroundColor("#0d0b14"); } catch (e) {}
+    if (tg.colorScheme === "dark") document.documentElement.classList.add("dark");
     tg.MainButton.onClick(submit);
   } else {
-    $("cta").style.display = "block";
+    if (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark");
     $("ctaBtn").onclick = submit;
   }
 
-  renderOps();
-  update();
+  applyTheme(); renderStatic(); renderOps(); renderPacks(); update();
+  if (new URLSearchParams(location.search).get("tab") === "orders") setTab("orders");
 })();
 </script>
 </body>
